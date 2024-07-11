@@ -1,0 +1,31 @@
+{
+  "name": "dt207g_moment4_webbservice",
+  "version": "1.0.0",
+  "description": "Webbservice part of Moment 4",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Hello World!\"",
+    "dev": "nodemon server.js",
+    "server": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LinnEriksson89/DT207G_Moment4_webbservice.git"
+  },
+  "author": "Linn Eriksson",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/LinnEriksson89/DT207G_Moment4_webbservice/issues"
+  },
+  "homepage": "https://github.com/LinnEriksson89/DT207G_Moment4_webbservice#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.4.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.3"
+  }
+}
