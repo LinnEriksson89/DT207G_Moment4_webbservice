@@ -105,7 +105,23 @@ router.post("/register", async (req, res) => {
 });
 
 router.post("/login", async (req, res) => {
-    console.log("Login called..");
+    try {
+        const {username, password} = req.body;
+
+        //Validate input
+        if(!username || !password) {
+            return res.status(400).json({error: "Invalid input, send username and password."});
+        }
+
+        //Check credentials.
+        if(username === "Linn" && password === "password") {
+            res.status(200).json({message: "Login successful."});
+        } else {
+            res.status(401).json({error: "Invalid username and/or password."});
+        }
+    } catch (error) {
+        res.status(500).json({ error: "Server error!" });
+    }
 });
 
 module.exports = router;
