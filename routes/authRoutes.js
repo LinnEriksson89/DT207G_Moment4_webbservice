@@ -2,8 +2,8 @@
  * Moment 4
  * Linn Eriksson, VT24
  */
-//Routes for authorizated users.
 
+//Routes for authorizated users.
 //constants and requirements.
 const express = require("express");
 const router = express.Router();
@@ -18,30 +18,14 @@ mongoose.connect(process.env.DBLINK)
         console.log("Error connecting do database: " + error);
     });
 
-//Create a schema.
-const userSchema = mongoose.Schema({
-    username: {
-        type: String,
-        required: [true, "Username required."],
-        min: [4, "Username has to be at least 4 characters."],
-        max: [25, "Usernam can't be more than 25 characters."]
-    },
-    password: {
-        type: String,
-        required: [true, "Password required."],
-        min: [10, "Password has to be at least 10 characters."],
-        max: [100, "Password can be max 100 characters."]
-    }
-});
-
-//Create a model.
-const User = mongoose.model("User", userSchema);
+//User model
+const User = require("../models/User");
 
 router.post("/register", async (req, res) => {
 
     //Variables from the body.
-    let username = req.body.username;
-    let password = req.body.password;
+    const username = req.body.username;
+    const password = req.body.password;
 
     //Object for errors.
     let error = {
@@ -86,19 +70,28 @@ router.post("/register", async (req, res) => {
 
     //Try-catch for actual post.
     try {
-        let user = {
-            username: username,
-            password: password
-        }
-
-        let result = await User.create(user);
-
-        if(result === null) {
-            return res.status(500).json({message: "Something went wrong: " + error});
+        const user = new User ({username, password});
+        const previousUser = await User.findOne({username});
+        
+        if (previousUser) {
+            //Error messages and response code.
+            error.message = "Username not available!";
+            error.details = "Usernames are unique and there is already an account with this username.";
+            error.https_response.message = "Bad request";
+            error.https_response.code = 400;
+    
+            //Send error message and return.
+            res.status(400).json(error);
+            return;
         } else {
-            return res.status(201).json({message: "User has been created!"});
-        }
+            let result = await user.save();
 
+            if(result === null) {
+                return res.status(500).json({message: "Something went wrong: " + error});
+            } else {
+                return res.status(201).json({message: "User has been created!"});
+            }
+        }
     } catch (error) {
         res.status(500).json({ error: "Server error!" });
     }
@@ -114,11 +107,24 @@ router.post("/login", async (req, res) => {
         }
 
         //Check credentials.
-        if(username === "Linn" && password === "password") {
-            res.status(200).json({message: "Login successful."});
-        } else {
+        //Does user exist?
+        const user = await User.findOne({username});
+
+        if(!user) {
             res.status(401).json({error: "Invalid username and/or password."});
         }
+
+        //Check password.
+        const isPasswordMatch = await user.comparePassword(password);
+        if(!isPasswordMatch) {
+            return  res.status(401).json({error: "Invalid username and/or password." + user});
+        }
+
+        //If password is correct.
+        if(isPasswordMatch) {
+            return  res.status(200).json({message: "Login successful."});
+        }
+
     } catch (error) {
         res.status(500).json({ error: "Server error!" });
     }
