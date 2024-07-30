@@ -8,6 +8,7 @@
 const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
+const jwt = require("jsonwebtoken");
 
 
 //Connect
@@ -116,13 +117,24 @@ router.post("/login", async (req, res) => {
 
         //Check password.
         const isPasswordMatch = await user.comparePassword(password);
-        if(!isPasswordMatch) {
-            return  res.status(401).json({error: "Invalid username and/or password." + user});
-        }
-
-        //If password is correct.
         if(isPasswordMatch) {
-            return  res.status(200).json({message: "Login successful."});
+            //If password is correct.
+
+            //Create JWT.
+            const payload  = {username: username};
+            const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, { expiresIn: "1h"});
+            const response = {
+                message: "Login successful.",
+                token: token
+            };
+
+            return  res.status(200).json(response);
+        } else if(!isPasswordMatch) {
+            //If password is not correct
+            return  res.status(401).json({error: "Invalid username and/or password." + user});
+        } else {
+            //Should be impossible to end up here, but better safe than sorry.
+            res.status(500).json({ error: "Server error!" });
         }
 
     } catch (error) {
