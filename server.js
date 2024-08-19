@@ -28,31 +28,6 @@ app.use(express.urlencoded({extended:true}));
 //Routes.
 app.use("/api", authRoutes);
 
-//Protected routes
-app.get("/api/protected", authenticateToken, (req, res) => {
-    res.json({message: "Protected route."});
-});
-
-function authenticateToken(req, res, next) {
-    const authHeader = req.headers["authorization"];
-    const token = authHeader && authHeader.split(" ")[1];
-
-    //If token exists.
-    if(token == null) {
-        res.status(401).json({message: "Not authorized."});
-    }
-
-    //Verify JWT.
-    jwt.verify(token, process.env.JWT_SECRET_KEY, (err, username) => {
-        if(err) {
-            return res.status(403).json({message: "Incorrect token!"});
-        }
-
-        req.username = username;
-        next();
-    });
-}
-
 app.listen(port, () => {
     console.log("Server running on port: " + port);
 });

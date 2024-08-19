@@ -21,6 +21,7 @@ mongoose.connect(process.env.DBLINK)
 
 //User model
 const User = require("../models/User");
+const Data = require("../models/Data");
 
 router.post("/register", async (req, res) => {
 
@@ -141,5 +142,46 @@ router.post("/login", async (req, res) => {
         res.status(500).json({ error: "Server error!" });
     }
 });
+
+router.get("/protected", authenticateToken, async (req, res) =>{ 
+
+    //Try-catch to fetch informaiton.
+    try {
+        
+        let result = await Data.find({});
+
+        //If there are no results, show 404, else send result.
+        if(result.length === 0) {
+            res.status(404).json({message: "No data found."});
+        } else {
+            return res.status(200).json(result);
+        }
+        
+    } catch (error) {
+        return res.status(500).json({message: "Something went wrong: " + error});
+    }
+});
+
+
+function authenticateToken(req, res, next) {
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
+
+    //If token exists.
+    if(token == null) {
+        return res.status(401).json({message: "Not authorized."});
+    }
+
+    //Verify JWT.
+    jwt.verify(token, process.env.JWT_SECRET_KEY, (err, username) => {
+        if(err) {
+            return res.status(403).json({message: "Incorrect token!"});
+        }
+
+        req.username = username;
+        next();
+    });
+}
+
 
 module.exports = router;
